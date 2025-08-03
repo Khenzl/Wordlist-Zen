@@ -2,6 +2,7 @@ import itertools
 import sys
 import os
 import hashlib
+import datetime
 import signal
 from collections import Counter
 import statistics
@@ -81,31 +82,45 @@ def menu():
 def gather_target_info():
     clear_screen()
     print(banner)
-    print(f"\n{Fore.YELLOW}Masukkan data target untuk membuat wordlist:{Style.RESET_ALL}")
-    name = input("Nama Lengkap: ").strip()
-    nickname = input("Nama Panggilan: ").strip()
-    birthdate = input("Tanggal Lahir (ddmmyyyy): ").strip()
-    birthplace = input("Tempat Lahir: ").strip()
-    address = input("Alamat: ").strip()
-    phone = input("Nomor HP: ").strip()
-    fav_word = input("Kata Favorit: ").strip()
-    pet_name = input("Nama Hewan Peliharaan: ").strip()
-    additional = input("Kata kunci tambahan (pisahkan dengan koma): ").strip().split(",")
+    print(f"\n{Fore.GREEN}Masukkan data target untuk membuat wordlist.{Style.RESET_ALL}")
+    print(f"{Fore.YELLOW}Tekan Ctrl+C untuk membatalkan Input.{Style.RESET_ALL}\n")
+
+
+    name = input(f"{Fore.CYAN}Nama Lengkap:\n>> {Style.RESET_ALL}").strip()
+    nickname = input(f"{Fore.CYAN}Nama Panggilan:\n>> {Style.RESET_ALL}").strip()
+    birthdate = input(f"{Fore.CYAN}Tanggal Lahir (ddmmyyyy):\n>> {Style.RESET_ALL}").strip()
+    birthplace = input(f"{Fore.CYAN}Tempat Lahir:\n>> {Style.RESET_ALL}").strip()
+    address = input(f"{Fore.CYAN}Alamat:\n>> {Style.RESET_ALL}").strip()
+    phone = input(f"{Fore.CYAN}Nomor HP:\n>> {Style.RESET_ALL}").strip()
+    fav_word = input(f"{Fore.CYAN}Kata Favorit:\n>> {Style.RESET_ALL}").strip()
+    pet_name = input(f"{Fore.CYAN}Nama Hewan Peliharaan:\n>> {Style.RESET_ALL}").strip()
+    additional = input(f"{Fore.CYAN}Kata kunci tambahan (pisahkan dengan koma):\n>> {Style.RESET_ALL}").strip().split(",")
+
     base_words = [name, nickname, birthdate, birthplace, address, phone, fav_word, pet_name] + additional
     return list(set([w.lower() for w in base_words if w]))
 
 def generate_targeted_wordlist():
-    global in_process
     base_words = gather_target_info()
+
     try:
-        min_len = int(input("Panjang minimal: "))
-        max_len = int(input("Panjang maksimal: "))
+        min_len = int(input(f"\n{Fore.GREEN}Panjang minimal:\n>> {Style.RESET_ALL}"))
+        max_len = int(input(f"{Fore.GREEN}Panjang maksimal:\n>> {Style.RESET_ALL}"))
     except ValueError:
         print(f"{Fore.RED}[ERROR] Input panjang tidak valid.{Style.RESET_ALL}")
         return
+
+    print(f"\n{Fore.YELLOW}Tekan Ctrl+C untuk membatalkan..{Style.RESET_ALL}\n")
+
+    folder_name = "wordlist"
+    if not os.path.exists(folder_name):
+        os.makedirs(folder_name)
+
+    timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+    output_file = os.path.join(folder_name, f"wordlist_{timestamp}.txt")
+
     print(f"{Fore.BLUE}[INFO] Membuat wordlist...{Style.RESET_ALL}")
-    in_process = True
     count = 0
+
     with open(output_file, "w") as f:
         for word in base_words:
             if min_len <= len(word) <= max_len:
@@ -116,15 +131,16 @@ def generate_targeted_wordlist():
                     if min_len <= len(combo) <= max_len:
                         f.write(combo + "\n")
                         count += 1
-    in_process = False
+
     print(f"\n{Fore.GREEN}[OK]{Style.RESET_ALL} Wordlist berhasil dibuat: {output_file} ({count} kata)\n")
+    input(f"{Fore.CYAN}Tekan ENTER untuk kembali ke menu utama...{Style.RESET_ALL}")
 
 # Generator Brute Force
 def brute_force_generator():
     clear_screen()
     print(banner)
     global in_process
-    os.makedirs("results", exist_ok=True)
+    os.makedirs("Wordlist_BF", exist_ok=True)
 
     print(f"\n{Fore.CYAN}========= Brute Force Wordlist Generator =========\n{Style.RESET_ALL}")
     print(f"{Fore.YELLOW}[1]{Style.RESET_ALL} Wordlist Angka (mis. 0000-9999)")
@@ -140,8 +156,8 @@ def brute_force_generator():
         return
 
     try:
-        min_len = input("Panjang minimum : ").strip()
-        max_len = input("Panjang maksimum: ").strip()
+        min_len = input(f"{Fore.CYAN}Panjang minimum:\n>> {Style.RESET_ALL}").strip()
+        max_len = input(f"{Fore.CYAN}Panjang maksimum:\n>> {Style.RESET_ALL}").strip()
         min_len = int(min_len) if min_len else 1
         max_len = int(max_len) if max_len else 9
     except ValueError:
@@ -153,6 +169,9 @@ def brute_force_generator():
         return
 
     charset = ""
+    prefix = ""
+    suffix = ""
+
     if pilihan == "1":
         charset = "0123456789"
     elif pilihan == "2":
@@ -161,16 +180,17 @@ def brute_force_generator():
         charset = "abcdefghijklmnopqrstuvwxyz0123456789"
     elif pilihan == "4":
         charset = "abcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()-_=+[]{}|;:'\",.<>/?"
-    if pilihan == "5":
+    elif pilihan == "5":
         charset = "abcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()-_=+[]{}|;:'\",.<>/?"
-
         prefix = input(f"\n{Fore.CYAN}[>] Masukkan awalan (prefix) [kosongkan jika tidak ada]: {Style.RESET_ALL}").strip()
         suffix = input(f"{Fore.CYAN}[>] Masukkan akhiran (suffix) [kosongkan jika tidak ada]: {Style.RESET_ALL}").strip()
     else:
         print(f"{Fore.RED}[ERROR]{Style.RESET_ALL} Pilihan tidak tersedia.")
         return
 
-    file_path = "results/bruteforce_generated.txt"
+    # Buat nama file unik
+    timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+    file_path = f"Wordlist_BF/bruteforce_{timestamp}.txt"
     count = 0
 
     print(f"{Fore.BLUE}[INFO]{Style.RESET_ALL} Membuat kombinasi, mohon tunggu...")
@@ -223,17 +243,22 @@ def merge_wordlists():
         input(Fore.YELLOW + "[ENTER] untuk kembali..." + Style.RESET_ALL)
         return
 
-    output_file = input("\nNama file output (cth: hasil_merge.txt): ").strip()
-    if not output_file.endswith(".txt"):
-        output_file += ".txt"
+    # Pastikan folder tujuan ada
+    output_dir = "Wordlist_Gabungan"
+    os.makedirs(output_dir, exist_ok=True)
+
+    # Buat nama file otomatis
+    timestamp = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
+    output_file = os.path.join(output_dir, f"hasil_merge_{timestamp}.txt")
 
     try:
         with open(output_file, "w") as outfile:
             for file in file_paths:
                 with open(file, "r") as infile:
-                    outfile.write(infile.read())
-                    if not infile.read().endswith("\n"):
-                        outfile.write("\n")  # Tambahkan baris baru jika perlu
+                    content = infile.read()
+                    outfile.write(content)
+                    if not content.endswith("\n"):
+                        outfile.write("\n")
 
         print(Fore.GREEN + f"\n[✓] Wordlist berhasil digabung ke: {output_file}" + Style.RESET_ALL)
     except Exception as e:
@@ -245,6 +270,7 @@ def merge_wordlists():
 def filter_wordlist():
     clear_screen()
     print(banner)
+    
     file_path = input(Fore.GREEN + "[>] Masukkan path file wordlist: " + Style.RESET_ALL).strip()
     if not os.path.exists(file_path):
         print(Fore.RED + "[!] File tidak ditemukan." + Style.RESET_ALL)
@@ -268,7 +294,7 @@ def filter_wordlist():
 
     filter_choice = input(Fore.CYAN + "[>] Pilihan: " + Style.RESET_ALL).strip()
 
-    regex_pattern = ""
+    regex_pattern = None
     if filter_choice == "1":
         regex_pattern = r"^\d+$"
     elif filter_choice == "2":
@@ -276,7 +302,7 @@ def filter_wordlist():
     elif filter_choice == "3":
         regex_pattern = r"^[a-zA-Z0-9]+$"
     elif filter_choice == "4":
-        regex_pattern = input(Fore.YELLOW + "[>] Masukkan pola regex (cth: ^admin): " + Style.RESET_ALL)
+        regex_pattern = input(Fore.YELLOW + "[>] Masukkan pola regex (cth: ^admin): " + Style.RESET_ALL).strip()
     elif filter_choice == "0":
         regex_pattern = None
     else:
@@ -284,9 +310,12 @@ def filter_wordlist():
         input(Fore.RED + "\n[0] Kembali..." + Style.RESET_ALL)
         return
 
-    output_file = input(Fore.YELLOW + "\n[>] Nama file output (cth: hasil_filter.txt): " + Style.RESET_ALL).strip()
-    if not output_file.endswith(".txt"):
-        output_file += ".txt"
+    # Pastikan folder output ada
+    output_dir = "Wordlist_Pola"
+    os.makedirs(output_dir, exist_ok=True)
+
+    timestamp = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
+    output_file = os.path.join(output_dir, f"hasil_filter_{timestamp}.txt")
 
     try:
         with open(file_path, "r") as infile:
@@ -365,7 +394,17 @@ def remove_duplicates():
 
     input(Fore.YELLOW + "\n[ENTER] untuk kembali ke menu..." + Style.RESET_ALL)
 
-#Enkripsi Wordlist
+# Enkripsi Wordlist
+def hash_word(word, algo):
+    if algo == "md5":
+        return hashlib.md5(word.encode()).hexdigest()
+    elif algo == "sha1":
+        return hashlib.sha1(word.encode()).hexdigest()
+    elif algo == "sha256":
+        return hashlib.sha256(word.encode()).hexdigest()
+    else:
+        return None
+
 def encrypt_wordlist():
     clear_screen()
     print(banner)
@@ -384,7 +423,6 @@ def encrypt_wordlist():
         input(Fore.RED + "\n[0] Kembali..." + Style.RESET_ALL)
         return
 
-    # Pilih algoritma
     print(Fore.MAGENTA + "\nPilih Algoritma Enkripsi:")
     print(" [1] MD5")
     print(" [2] SHA1")
@@ -402,10 +440,12 @@ def encrypt_wordlist():
 
     algo_dict = {"1": "md5", "2": "sha1", "3": "sha256"}
     algo_name = algo_dict[algo]
-    
-    output_file = input("\n[>] Nama file output (cth: hasil_enkripsi.txt): ").strip()
-    if not output_file.endswith(".txt"):
-        output_file += ".txt"
+
+    # Siapkan folder dan file output
+    output_dir = "Enkripsi_Wordlist"
+    os.makedirs(output_dir, exist_ok=True)
+    timestamp = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
+    output_file = os.path.join(output_dir, f"hasil_enkripsi_{algo_name}_{timestamp}.txt")
 
     lines = []
 
@@ -454,12 +494,26 @@ def encrypt_wordlist():
                     if i == 9:
                         break
 
+        print(Fore.CYAN + f"\n[INFO] Hasil enkripsi disimpan otomatis di folder: {output_dir}/" + Style.RESET_ALL)
+        print(Fore.GREEN + f"[✓] Nama File: {os.path.basename(output_file)}" + Style.RESET_ALL)
+
     except Exception as e:
         print(Fore.RED + f"[ERROR] Gagal mengenkripsi: {e}" + Style.RESET_ALL)
 
     input(Fore.YELLOW + "\n[ENTER] untuk kembali ke menu..." + Style.RESET_ALL)
 
 # Dekripsi Wordlist (Via Api/Lokal)
+def identifikasi_hash(hash_str):
+    length = len(hash_str)
+    if length == 32:
+        return "MD5"
+    elif length == 40:
+        return "SHA1"
+    elif length == 64:
+        return "SHA256"
+    else:
+        return "UNKNOWN"
+
 def dekripsi_lokal(hash_target, jenis_hash, wordlist_path):
     print(Fore.YELLOW + "[*] Mencoba dekripsi lokal via wordlist...")
     try:
@@ -486,7 +540,6 @@ def dekripsi_lokal(hash_target, jenis_hash, wordlist_path):
 def dekripsi_api(hash_target):
     print(Fore.YELLOW + "[*] Mencoba dekripsi via API...")
     try:
-        # API contoh (ubah sesuai API yang kamu pakai)
         url = f"https://api.hashlookup.dev/{hash_target}"
         r = requests.get(url)
         if r.status_code == 200:
@@ -507,9 +560,9 @@ def dekripsi_wordlist_tool():
     print(banner)
     print(Fore.GREEN + "\n========== Dekripsi Wordlist ===========\n" + Style.RESET_ALL)
     print(Fore.MAGENTA + "Pilih Jenis Hash:")
-    print(f"[1] Input hash manual")
-    print(f"[2] Input file berisi daftar hash")
-    print(f"{Fore.RED}[0] Kembali\n" + Style.RESET_ALL)
+    print("[1] Input hash manual")
+    print("[2] Input file berisi daftar hash")
+    print(Fore.RED + "[0] Kembali\n" + Style.RESET_ALL)
 
     opsi = input(Fore.CYAN + "[>] Pilih opsi: " + Style.RESET_ALL).strip()
 
@@ -562,9 +615,15 @@ def dekripsi_wordlist_tool():
         return
 
     if hasil_dekripsi:
-        with open("hasil_dekripsi.txt", "w") as out:
+        output_dir = "Hasil_Dekripsi"
+        os.makedirs(output_dir, exist_ok=True)
+        timestamp = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
+        output_file = os.path.join(output_dir, f"hasil_dekripsi_{timestamp}.txt")
+
+        with open(output_file, "w") as out:
             out.write("\n".join(hasil_dekripsi))
-        print(Fore.GREEN + f"\n[✓] Semua hasil disimpan ke: hasil_dekripsi.txt")
+
+        print(Fore.GREEN + f"\n[✓] Semua hasil dekripsi disimpan ke: {output_file}")
     else:
         print(Fore.RED + "\n[X] Tidak ada hash yang berhasil didekripsi.")
 
@@ -654,7 +713,6 @@ def sort_and_unique_wordlist():
         with open(wordlist_path, "r", encoding="utf-8", errors="ignore") as file:
             lines = file.readlines()
 
-        # Bersihkan dan buang baris kosong
         cleaned = list(set([line.strip() for line in lines if line.strip() != ""]))
 
         print(Fore.CYAN + "\n[1] Sortir A–Z")
@@ -672,23 +730,37 @@ def sort_and_unique_wordlist():
             cleaned.sort(key=len)
         elif pilihan == "4":
             cleaned = ["".join(filter(str.isalnum, line)) for line in cleaned if line]
-            cleaned = sorted(set(cleaned))  # Unikkan kembali
+            cleaned = sorted(set(cleaned))
         else:
             print(Fore.RED + "[!] Pilihan tidak valid." + Style.RESET_ALL)
             return
 
-        output_file = input(Fore.CYAN + "\nNama file output (cth: wordlist_sorted.txt): " + Style.RESET_ALL).strip()
-        if not output_file.endswith(".txt"):
-            output_file += ".txt"
+        output_dir = "sorted_wordlists"
+        os.makedirs(output_dir, exist_ok=True)
 
-        with open(output_file, "w") as outfile:
+        output_name = input(Fore.CYAN + "\nNama file output (cth: unik1.txt): " + Style.RESET_ALL).strip()
+        if not output_name.endswith(".txt"):
+            output_name += ".txt"
+
+        base_name = os.path.splitext(output_name)[0]
+        ext = os.path.splitext(output_name)[1]
+        output_path = os.path.join(output_dir, output_name)
+        counter = 1
+
+        while os.path.exists(output_path):
+            output_name = f"{base_name}_{counter}{ext}"
+            output_path = os.path.join(output_dir, output_name)
+            counter += 1
+
+        with open(output_path, "w") as outfile:
             for word in cleaned:
                 outfile.write(word + "\n")
 
-        print(Fore.GREEN + f"\n[✓] Wordlist berhasil disortir dan disimpan ke: {output_file}" + Style.RESET_ALL)
+        print(Fore.GREEN + f"\n[✓] Wordlist berhasil disimpan ke: {output_path}" + Style.RESET_ALL)
 
     except Exception as e:
         print(Fore.RED + f"[ERROR] Terjadi kesalahan: {e}" + Style.RESET_ALL)
+
     input(Fore.YELLOW + "\n[ENTER] untuk kembali ke menu..." + Style.RESET_ALL)
 
 # ==== Fungsi Utama ====

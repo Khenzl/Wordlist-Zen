@@ -4,6 +4,8 @@ Custom Wordlist Generator for Pentest by Khenzl
 ## 📌 Deskripsi
 Wordlist-Zen adalah tool sederhana yang dibuat untuk membantu Anda menghasilkan file wordlist dengan kombinasi nama, angka, tanggal, dan karakter tambahan lainnya secara otomatis.
 
+![Preview Wordlist-Zen](Images/Wordlist-Zen.jpg)
+
 Tool ini sangat cocok digunakan oleh penetration tester, ethical hacker, atau siapa saja yang butuh wordlist custom dengan cepat di Termux.
 
 ---
